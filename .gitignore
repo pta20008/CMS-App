@@ -1,0 +1,8 @@
+/CMSapp/nbproject/private/
+/CMSapp/build/
+CMSapp/build.xml
+CMSapp/manifest.mf
+CMSapp/nbproject/build-impl.xml
+CMSapp/nbproject/genfiles.properties
+CMSapp/nbproject/project.properties
+CMSapp/nbproject/project.xml
