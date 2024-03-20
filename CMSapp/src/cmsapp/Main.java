@@ -8,8 +8,11 @@ package cmsapp;
  * @author bruno
  */
 
+
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Scanner;
 
@@ -24,7 +27,7 @@ public class Main {
             System.out.println("Database connection established successfully!");
 
             Scanner scanner = new Scanner(System.in);
-            User authenticatedUser = authenticateUser(scanner);
+            User authenticatedUser = authenticateUser(scanner, connection);
             if (authenticatedUser == null) {
                 System.out.println("Authentication failed. Exiting...");
                 return;
@@ -36,20 +39,30 @@ public class Main {
         }
     }
 
-    private static User authenticateUser(Scanner scanner) {
-        System.out.print("Enter username: ");
-        String username = scanner.nextLine();
-        System.out.print("Enter password: ");
-        String password = scanner.nextLine();
+    private static User authenticateUser(Scanner scanner, Connection connection) {
+        try {
+            System.out.print("Enter username: ");
+            String username = scanner.nextLine();
+            System.out.print("Enter password: ");
+            String password = scanner.nextLine();
 
-        if (username.equals("admin") && password.equals("java")) {
-            return new User(username, UserRole.ADMIN);
-        } else if (username.equals("office") && password.equals("office")) {
-            return new User(username, UserRole.OFFICE);
-        } else if (username.equals("lecturer") && password.equals("lecturer")) {
-            return new User(username, UserRole.LECTURER);
-        } else {
-            System.out.println("Invalid username or password.");
+            String query = "SELECT username, role FROM users WHERE username = ? AND password = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, username);
+            statement.setString(2, password);
+
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                String retrievedUsername = resultSet.getString("username");
+                String roleString = resultSet.getString("role");
+                UserRole role = UserRole.valueOf(roleString.toUpperCase());
+                return new User(retrievedUsername, role);
+            } else {
+                System.out.println("Invalid username or password.");
+                return null;
+            }
+        } catch (SQLException e) {
+            System.out.println("Error authenticating user: " + e.getMessage());
             return null;
         }
     }
@@ -57,16 +70,21 @@ public class Main {
     private static void displayMenu(User user, Scanner scanner, Connection connection) {
         while (true) {
             System.out.println("\n===== College Management System Menu =====");
-            System.out.println("User: " + user.getRole()); // Displays the role of the logged-in user
+            System.out.println("User: " + user.getUsername() + " (" + user.getRole() + ")"); // Displays the username and role of the logged-in user
             System.out.println("1. Generate Course Report");
             System.out.println("2. Generate Student Report");
             System.out.println("3. Generate Lecturer Report");
 
             if (user.getRole() == UserRole.OFFICE || user.getRole() == UserRole.ADMIN) {
-                System.out.println("4. Change Password");
+                System.out.println("4. Change Username");
+                System.out.println("5. Change Password");
             }
 
-            System.out.println("5. Logout");
+            if (user.getRole() == UserRole.ADMIN) {
+                System.out.println("6. Add User");
+            }
+
+            System.out.println("0. Logout");
 
             System.out.print("Enter your choice: ");
             int choice = scanner.nextInt();
@@ -83,13 +101,19 @@ public class Main {
                     generateLecturerReport(connection);
                     break;
                 case 4:
-                    if (user.getRole() == UserRole.OFFICE || user.getRole() == UserRole.ADMIN) {
-                        changePassword(user, scanner);
+                    changeUsername(user, scanner, connection);
+                    break;
+                case 5:
+                    changePassword(user, scanner, connection);
+                    break;
+                case 6:
+                    if (user.getRole() == UserRole.ADMIN) {
+                        addUser(scanner, connection);
                     } else {
                         System.out.println("Invalid choice.");
                     }
                     break;
-                case 5:
+                case 0:
                     System.out.println("Logging out...");
                     return;
                 default:
@@ -114,19 +138,65 @@ public class Main {
         System.out.println("Generating Lecturer Report...");
     }
 
-    private static void changePassword(User user, Scanner scanner) {
-        System.out.print("Enter current password: ");
-        String currentPassword = scanner.nextLine();
+    private static void changePassword(User user, Scanner scanner, Connection connection) {
+        try {
+            System.out.print("Enter new password: ");
+            String newPassword = scanner.nextLine();
 
-        if (!currentPassword.equals(user.getPassword())) {
-            System.out.println("Incorrect password.");
-            return;
+            String updateQuery = "UPDATE users SET password = ? WHERE username = ?";
+            PreparedStatement updateStatement = connection.prepareStatement(updateQuery);
+            updateStatement.setString(1, newPassword);
+            updateStatement.setString(2, user.getUsername());
+            updateStatement.executeUpdate();
+
+            System.out.println("Password changed successfully.");
+        } catch (SQLException e) {
+            System.out.println("Error changing password: " + e.getMessage());
         }
+    }
 
-        System.out.print("Enter new password: ");
-        String newPassword = scanner.nextLine();
-        user.setPassword(newPassword);
-        System.out.println("Password changed successfully.");
+    private static void changeUsername(User user, Scanner scanner, Connection connection) {
+        try {
+            System.out.print("Enter new username: ");
+            String newUsername = scanner.nextLine();
+
+            String updateQuery = "UPDATE users SET username = ? WHERE username = ?";
+            PreparedStatement updateStatement = connection.prepareStatement(updateQuery);
+            updateStatement.setString(1, newUsername);
+            updateStatement.setString(2, user.getUsername());
+            updateStatement.executeUpdate();
+
+            user.setUsername(newUsername); // Update the username in the User object as well
+            System.out.println("Username changed successfully.");
+        } catch (SQLException e) {
+            System.out.println("Error changing username: " + e.getMessage());
+        }
+    }
+
+    private static void addUser(Scanner scanner, Connection connection) {
+        try {
+            System.out.print("Enter username for the new user: ");
+            String username = scanner.nextLine();
+            System.out.print("Enter password for the new user: ");
+            String password = scanner.nextLine();
+            System.out.print("Enter role for the new user (ADMIN, OFFICE, LECTURER): ");
+            String roleString = scanner.nextLine();
+
+            // Convert role string to enum
+            UserRole role = UserRole.valueOf(roleString.toUpperCase());
+
+            // Insert new user into the database
+            String insertQuery = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
+            PreparedStatement insertStatement = connection.prepareStatement(insertQuery);
+            insertStatement.setString(1, username);
+            insertStatement.setString(2, password);
+            insertStatement.setString(3, role.toString());
+            insertStatement.executeUpdate();
+
+            System.out.println("User added successfully.");
+        } catch (SQLException e) {
+            System.out.println("Error adding user: " + e.getMessage());
+        }
     }
 }
 
@@ -138,7 +208,6 @@ enum UserRole {
 
 class User {
     private String username;
-    private String password;
     private UserRole role;
 
     public User(String username, UserRole role) {
@@ -154,11 +223,7 @@ class User {
         return role;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
+    public void setUsername(String username) {
+        this.username = username;
     }
 }
