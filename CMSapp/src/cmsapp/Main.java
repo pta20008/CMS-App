@@ -8,32 +8,32 @@ package cmsapp;
  * @author bruno
  */
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.Scanner;
 
 public class Main {
-    private static final String ADMIN_USERNAME = "admin";
-    private static final String ADMIN_PASSWORD = "java";
-    private static final String OFFICE_USERNAME = "office";
-    private static final String OFFICE_PASSWORD = "office";
-    private static final String LECTURER_USERNAME = "lecturer";
-    private static final String LECTURER_PASSWORD = "lecturer";
+    private static final String DB_URL = "jdbc:mysql://localhost/cms_db";
+    private static final String DB_USER = "pooa2024";
+    private static final String DB_PASSWORD = "pooa2024";
 
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
+        try {
+            Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            System.out.println("Database connection established successfully!");
 
-        // Authenticate the user
-        User authenticatedUser = authenticateUser(scanner);
-        if (authenticatedUser == null) {
-            System.out.println("Authentication failed. Exiting...");
-            return;
+            Scanner scanner = new Scanner(System.in);
+            User authenticatedUser = authenticateUser(scanner);
+            if (authenticatedUser == null) {
+                System.out.println("Authentication failed. Exiting...");
+                return;
+            }
+
+            displayMenu(authenticatedUser, scanner, connection);
+        } catch (SQLException e) {
+            System.out.println("Error connecting to the database: " + e.getMessage());
         }
-
-        // Display menu based on user role
-        displayMenu(authenticatedUser, scanner);
     }
 
     private static User authenticateUser(Scanner scanner) {
@@ -42,11 +42,11 @@ public class Main {
         System.out.print("Enter password: ");
         String password = scanner.nextLine();
 
-        if (username.equals(ADMIN_USERNAME) && password.equals(ADMIN_PASSWORD)) {
+        if (username.equals("admin") && password.equals("java")) {
             return new User(username, UserRole.ADMIN);
-        } else if (username.equals(OFFICE_USERNAME) && password.equals(OFFICE_PASSWORD)) {
+        } else if (username.equals("office") && password.equals("office")) {
             return new User(username, UserRole.OFFICE);
-        } else if (username.equals(LECTURER_USERNAME) && password.equals(LECTURER_PASSWORD)) {
+        } else if (username.equals("lecturer") && password.equals("lecturer")) {
             return new User(username, UserRole.LECTURER);
         } else {
             System.out.println("Invalid username or password.");
@@ -54,9 +54,10 @@ public class Main {
         }
     }
 
-    private static void displayMenu(User user, Scanner scanner) {
+    private static void displayMenu(User user, Scanner scanner, Connection connection) {
         while (true) {
             System.out.println("\n===== College Management System Menu =====");
+            System.out.println("User: " + user.getRole()); // Displays the role of the logged-in user
             System.out.println("1. Generate Course Report");
             System.out.println("2. Generate Student Report");
             System.out.println("3. Generate Lecturer Report");
@@ -73,13 +74,13 @@ public class Main {
 
             switch (choice) {
                 case 1:
-                    generateCourseReport();
+                    generateCourseReport(connection);
                     break;
                 case 2:
-                    generateStudentReport();
+                    generateStudentReport(connection);
                     break;
                 case 3:
-                    generateLecturerReport();
+                    generateLecturerReport(connection);
                     break;
                 case 4:
                     if (user.getRole() == UserRole.OFFICE || user.getRole() == UserRole.ADMIN) {
@@ -98,18 +99,18 @@ public class Main {
         }
     }
 
-    private static void generateCourseReport() {
-        // Implement course report generation logic
+    private static void generateCourseReport(Connection connection) {
+        // Implement course report generation logic with database operations
         System.out.println("Generating Course Report...");
     }
 
-    private static void generateStudentReport() {
-        // Implement student report generation logic
+    private static void generateStudentReport(Connection connection) {
+        // Implement student report generation logic with database operations
         System.out.println("Generating Student Report...");
     }
 
-    private static void generateLecturerReport() {
-        // Implement lecturer report generation logic
+    private static void generateLecturerReport(Connection connection) {
+        // Implement lecturer report generation logic with database operations
         System.out.println("Generating Lecturer Report...");
     }
 
