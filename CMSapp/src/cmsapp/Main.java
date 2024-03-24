@@ -1,12 +1,17 @@
 /*
  * https://github.com/pta20008/CMS-App.git
  */
+
 package cmsapp;
 
 /**
+ * Main class responsible for handling user authentication and menu display.
+ * Built to manager user interactions and use appropriate methods based on user input.
+ * Connects to the database and executes SQL queries.
  *
  * @author bruno
- */
+ **/
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -18,30 +23,32 @@ import cmsapp.LecturerReportGenerator;
 
 
 public class Main {
-
+    // Database connection details
     private static final String DB_URL = "jdbc:mysql://localhost/cms_db";
     private static final String DB_USER = "pooa2024";
     private static final String DB_PASSWORD = "pooa2024";
 
     public static void main(String[] args) {
         try {
+            // Establish database connection
             Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
             System.out.println("Database connection established successfully!");
             System.out.println("Welcome, please log in!");
-
+            // Initialize scanner for user input
             Scanner scanner = new Scanner(System.in);
+            // Authenticate user
             User authenticatedUser = authenticateUser(scanner, connection);
             if (authenticatedUser == null) {
                 System.out.println("Authentication failed. Exiting...");
                 return;
             }
-
+            // Display menu based on user role
             displayMenu(authenticatedUser, scanner, connection);
         } catch (SQLException e) {
             System.out.println("Error connecting to the database: " + e.getMessage());
         }
     }
-
+    // Method to authenticate user by username and password
     private static User authenticateUser(Scanner scanner, Connection connection) {
         while (true) {
             try {
@@ -49,12 +56,14 @@ public class Main {
                 String username = scanner.nextLine();
                 System.out.print("Enter password: ");
                 String password = scanner.nextLine();
-
+                
+                // SQL query to retrieve user information based on username and password
                 String query = "SELECT username, role FROM users WHERE username = ? AND password = ?";
                 PreparedStatement statement = connection.prepareStatement(query);
                 statement.setString(1, username);
                 statement.setString(2, password);
 
+                // Execute query and process results
                 ResultSet resultSet = statement.executeQuery();
                 if (resultSet.next()) {
                     String retrievedUsername = resultSet.getString("username");
@@ -69,13 +78,15 @@ public class Main {
             }
         }
     }
-
+    
+    // Method to display menu options based on user role
     private static void displayMenu(User user, Scanner scanner, Connection connection) {
         while (true) {
             System.out.println("\n===== College Management System Menu =====");
             System.out.println("Welcome: " + user.getUsername() + "\nRole: (" + user.getRole() + ")"); // Exibe o nome de usuário e a função do usuário conectado
             System.out.println();
 
+            // Display menu options based on user role
             if (user.getRole() == UserRole.OFFICE) {
                 System.out.println("1. Generate Course Report");
                 System.out.println("2. Generate Student Report");
@@ -96,9 +107,10 @@ public class Main {
                 System.out.println("0. Logout");
             }
 
+            // Prompt user for input and process choice
             System.out.print("\nEnter your choice: ");
             int choice = scanner.nextInt();
-            scanner.nextLine(); // Consumir o caractere de nova linha
+            scanner.nextLine(); // Consume newline character
 
             switch (choice) {
                 case 1:
@@ -142,22 +154,22 @@ public class Main {
             }
         }
     }
-
+    // Method to generate course report
     private static void generateCourseReport(Connection connection) {
         // Implement course report generation logic with database operations
         System.out.println("Generating Course Report...");
     }
-
+    // Method to generate student report
     private static void generateStudentReport(Connection connection) {
         // Implement student report generation logic with database operations
         System.out.println("Generating Student Report...");
     }
-
+    // Method to generate Lecturer report
     private static void generateLecturerReport(String username, Connection connection) {
         // Implement lecturer report generation logic with database operations
         System.out.println("Generating Lecturer Report...");
     }
-
+    // Method to change user password
     private static void changePassword(User user, Scanner scanner, Connection connection) {
         try {
             System.out.print("Enter new password: ");
@@ -174,7 +186,7 @@ public class Main {
             System.out.println("Error changing password: " + e.getMessage());
         }
     }
-
+     // Method to change username
     private static void changeUsername(User user, Scanner scanner, Connection connection) {
         try {
             System.out.print("Enter new username: ");
@@ -192,7 +204,7 @@ public class Main {
             System.out.println("Error changing username: " + e.getMessage());
         }
     }
-
+    // Method to create a new user
     private static void addUser(Scanner scanner, Connection connection) {
         try {
             System.out.print("Enter username for the new user: ");
@@ -218,7 +230,7 @@ public class Main {
             System.out.println("Error adding user: " + e.getMessage());
         }
     }
-
+    // Method to remove user
     private static void removeUser(Scanner scanner, Connection connection) {
         try {
             System.out.print("\nEnter user_id to remove:");
@@ -263,13 +275,13 @@ public class Main {
     }
 
 }
-
+// Enum to represent user roles
 enum UserRole {
     ADMIN,
     OFFICE,
     LECTURER
 }
-
+// User class representing a user with username and role
 class User {
 
     private String username;

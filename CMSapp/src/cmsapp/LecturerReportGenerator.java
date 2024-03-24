@@ -1,6 +1,7 @@
 /*
  * https://github.com/pta20008/CMS-App.git
  */
+
 package cmsapp;
 
 /**
@@ -8,16 +9,19 @@ package cmsapp;
  * @author bruno
  */
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Scanner;
 
 public class LecturerReportGenerator {
 
     public static void generateLecturerReport(String username, Connection connection) {
         try {
-            // Consulta para recuperar informações dos professores e contagem de alunos
+            // Check info about lectures and students count
             String query = "SELECT c.lecturer, c.program, COUNT(e.student_id) AS students_count " +
                            "FROM courses c " +
                            "INNER JOIN enrollments e ON c.course_id = e.course_id " +
@@ -25,26 +29,73 @@ public class LecturerReportGenerator {
             PreparedStatement statement = connection.prepareStatement(query);
             ResultSet resultSet = statement.executeQuery();
 
-            // Verificar se há resultados
+            // Check if there are results
             if (!resultSet.isBeforeFirst()) {
                 System.out.println("No data found for lecturer report.");
                 return;
             }
 
-            // Exibir o relatório
-            System.out.println("\n===== Lecturer Report =====");
+            // Report options
+            System.out.println("How do you want to display the report?");
+            System.out.println("1. Print on screen");
+            System.out.println("2. Save to text file");
+            
+            System.out.print("\nEnter your choice: ");
+
+            Scanner scanner = new Scanner(System.in);
+            int choice = scanner.nextInt();
+            scanner.nextLine();
+
+            // Check user choice
+            switch (choice) {
+                case 1:
+                    printReport(resultSet);
+                    break;
+                case 2:
+                    saveReportToFile(resultSet);
+                    break;
+                default:
+                    System.out.println("Invalid choice. Printing on screen by default.");
+                    printReport(resultSet);
+                    break;
+            }
+        } catch (SQLException e) {
+            System.out.println("Error generating lecturer report: " + e.getMessage());
+        }
+    }
+
+    // Method to print the report on screen
+    private static void printReport(ResultSet resultSet) throws SQLException {
+        System.out.println("\n===== Lecturer Report =====");
+        while (resultSet.next()) {
+            String lecturerName = resultSet.getString("lecturer");
+            String program = resultSet.getString("program");
+            int studentsCount = resultSet.getInt("students_count");
+
+            System.out.println("Lecturer: " + lecturerName);
+            System.out.println("Program: " + program);
+            System.out.println("Students Count: " + studentsCount);
+            System.out.println("-----------------------------");
+        }
+    }
+
+    // Method to print the report on text file (.txt)
+    private static void saveReportToFile(ResultSet resultSet) throws SQLException {
+        try (FileWriter writer = new FileWriter("lecturer_report.txt")) {
+            writer.write("===== Lecturer Report =====\n");
             while (resultSet.next()) {
                 String lecturerName = resultSet.getString("lecturer");
                 String program = resultSet.getString("program");
                 int studentsCount = resultSet.getInt("students_count");
 
-                System.out.println("Lecturer: " + lecturerName);
-                System.out.println("Program: " + program);
-                System.out.println("Students Count: " + studentsCount);
-                System.out.println("-----------------------------");
+                writer.write("Lecturer: " + lecturerName + "\n");
+                writer.write("Program: " + program + "\n");
+                writer.write("Students Count: " + studentsCount + "\n");
+                writer.write("-----------------------------\n");
             }
-        } catch (SQLException e) {
-            System.out.println("Error generating lecturer report: " + e.getMessage());
+            System.out.println("Report saved to lecturer_report.txt");
+        } catch (IOException e) {
+            System.out.println("Error saving report to file: " + e.getMessage());
         }
     }
 }
