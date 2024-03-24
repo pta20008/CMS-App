@@ -39,7 +39,8 @@ public class LecturerReportGenerator {
             System.out.println("How do you want to display the report?");
             System.out.println("1. Print on screen");
             System.out.println("2. Save to text file");
-            
+            System.out.println("3. Save to CSV file");
+
             System.out.print("\nEnter your choice: ");
 
             Scanner scanner = new Scanner(System.in);
@@ -52,7 +53,10 @@ public class LecturerReportGenerator {
                     printReport(resultSet);
                     break;
                 case 2:
-                    saveReportToFile(resultSet);
+                    saveReportToTextFile(resultSet);
+                    break;
+                case 3:
+                    saveReportToCSVFile(resultSet);
                     break;
                 default:
                     System.out.println("Invalid choice. Printing on screen by default.");
@@ -79,8 +83,8 @@ public class LecturerReportGenerator {
         }
     }
 
-    // Method to print the report on text file (.txt)
-    private static void saveReportToFile(ResultSet resultSet) throws SQLException {
+    // Method to save the report to a text file (.txt)
+    private static void saveReportToTextFile(ResultSet resultSet) throws SQLException {
         try (FileWriter writer = new FileWriter("lecturer_report.txt")) {
             writer.write("===== Lecturer Report =====\n");
             while (resultSet.next()) {
@@ -96,6 +100,28 @@ public class LecturerReportGenerator {
             System.out.println("Report saved to lecturer_report.txt");
         } catch (IOException e) {
             System.out.println("Error saving report to file: " + e.getMessage());
+        }
+    }
+
+    // Method to save the report to a CSV file (.csv)
+    private static void saveReportToCSVFile(ResultSet resultSet) throws SQLException {
+        try (FileWriter writer = new FileWriter("lecturer_report.csv")) {
+            // Write header to CSV file
+            writer.write("Lecturer,Program,Students Count\n");
+
+            // Write data rows to CSV file
+            while (resultSet.next()) {
+                String lecturerName = resultSet.getString("lecturer");
+                String program = resultSet.getString("program");
+                int studentsCount = resultSet.getInt("students_count");
+
+                // Format the row as CSV format
+                String csvRow = String.format("%s,%s,%d\n", lecturerName, program, studentsCount);
+                writer.write(csvRow);
+            }
+            System.out.println("Report saved to lecturer_report.csv");
+        } catch (IOException e) {
+            System.out.println("Error saving report to CSV file: " + e.getMessage());
         }
     }
 }

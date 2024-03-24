@@ -164,11 +164,7 @@ public class Main {
         // Implement student report generation logic with database operations
         System.out.println("Generating Student Report...");
     }
-    // Method to generate Lecturer report
-    private static void generateLecturerReport(String username, Connection connection) {
-        // Implement lecturer report generation logic with database operations
-        System.out.println("Generating Lecturer Report...");
-    }
+
     // Method to change user password
     private static void changePassword(User user, Scanner scanner, Connection connection) {
         try {
