@@ -1,13 +1,11 @@
 /*
  * https://github.com/pta20008/CMS-App.git
  */
-
 package cmsapp;
 
 /**
  * @author bruno
  */
-
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
@@ -22,8 +20,9 @@ public class OfficeReportGenerator {
         Scanner scanner = new Scanner(System.in);
         System.out.println("\nHow do you want to display the report?");
         System.out.println("1. Print to console");
-        System.out.println("2. Save to file");
-        
+        System.out.println("2. Save to text file");
+        System.out.println("3. Save to CSV file");
+
         System.out.print("\nEnter your choice: ");
 
         int option = scanner.nextInt();
@@ -36,8 +35,11 @@ public class OfficeReportGenerator {
             case 2:
                 generateStudentReportToFile(connection);
                 break;
+            case 3:
+                generateStudentReportToCSV(connection);
+                break;
             default:
-                System.out.println("Invalid option. Please choose 1 or 2.");
+                System.out.println("Invalid option. Please choose 1, 2, or 3.");
                 break;
         }
     }
@@ -140,12 +142,52 @@ public class OfficeReportGenerator {
         }
     }
 
+    private static void generateStudentReportToCSV(Connection connection) {
+        try {
+            FileWriter writer = new FileWriter("Student_Report.csv");
+
+            // Writing header
+            writer.write("Student ID,Name,Student Number,Program,Enrolled Modules,Completed Modules,Modules to Repeat\n");
+
+            // Finding all students
+            String query = "SELECT * FROM students";
+            PreparedStatement statement = connection.prepareStatement(query);
+            ResultSet resultSet = statement.executeQuery();
+
+            // Generating a report for each student
+            while (resultSet.next()) {
+                int studentId = resultSet.getInt("student_id");
+                String studentName = resultSet.getString("student_name");
+                String studentNumber = resultSet.getString("student_number");
+                String program = resultSet.getString("program");
+
+                StringBuilder enrolledModules = new StringBuilder();
+                StringBuilder completedModules = new StringBuilder();
+                StringBuilder modulesToRepeat = new StringBuilder();
+
+                // Retrieving student data
+                retrieveEnrolledModulesToString(studentId, enrolledModules, connection);
+                retrieveCompletedModulesToString(studentId, completedModules, connection);
+                retrieveModulesToRepeatToString(studentId, modulesToRepeat, connection);
+
+                // Writing student data to CSV
+                writer.write(String.format("%d,%s,%s,%s,%s,%s,%s\n", studentId, studentName, studentNumber, program,
+                        enrolledModules.toString(), completedModules.toString(), modulesToRepeat.toString()));
+            }
+
+            writer.close();
+            System.out.println("Report written to file: Student_Report.csv");
+        } catch (IOException | SQLException e) {
+            System.out.println("Error generating student report: " + e.getMessage());
+        }
+    }
+
     // Method to retrieve students' enrolled modules
     private static void retrieveEnrolledModules(int studentId, Connection connection) {
         try {
-            String query = "SELECT c.course_name FROM enrollments e " +
-                    "JOIN courses c ON e.course_id = c.course_id " +
-                    "WHERE e.student_id = ?";
+            String query = "SELECT c.course_name FROM enrollments e "
+                    + "JOIN courses c ON e.course_id = c.course_id "
+                    + "WHERE e.student_id = ?";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, studentId);
 
@@ -157,19 +199,17 @@ public class OfficeReportGenerator {
             }
         } catch (SQLException e) {
             System.out.println("Error retrieving enrolled modules: " + e.getMessage());
-            }
-        } 
-   
+        }
+    }
 
     // Method to write students' enrolled modules to file
     private static void writeEnrolledModulesToFile(int studentId, FileWriter writer, Connection connection) throws IOException {
         try {
-            String query = "SELECT c.course_name FROM enrollments e " +
-                    "JOIN courses c ON e.course_id = c.course_id " +
-                    "WHERE e.student_id = ?";
+            String query = "SELECT c.course_name FROM enrollments e "
+                    + "JOIN courses c ON e.course_id = c.course_id "
+                    + "WHERE e.student_id = ?";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, studentId);
-
             ResultSet resultSet = statement.executeQuery();
 
             while (resultSet.next()) {
@@ -181,13 +221,37 @@ public class OfficeReportGenerator {
         }
     }
 
+    // Method to retrieve students' enrolled modules as a string
+    private static void retrieveEnrolledModulesToString(int studentId, StringBuilder stringBuilder, Connection connection) {
+        try {
+            String query = "SELECT c.course_name FROM enrollments e "
+                    + "JOIN courses c ON e.course_id = c.course_id "
+                    + "WHERE e.student_id = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, studentId);
+
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                String courseName = resultSet.getString("course_name");
+                stringBuilder.append(courseName).append(", ");
+            }
+            // Remove trailing comma and space
+            if (stringBuilder.length() > 2) {
+                stringBuilder.setLength(stringBuilder.length() - 2);
+            }
+        } catch (SQLException e) {
+            stringBuilder.append("Error retrieving enrolled modules: ").append(e.getMessage());
+        }
+    }
+
     // Method to check completed modules and student grades
     private static void retrieveCompletedModules(int studentId, Connection connection) {
         try {
-            String query = "SELECT c.course_name, g.grade FROM enrollments e " +
-                    "JOIN courses c ON e.course_id = c.course_id " +
-                    "LEFT JOIN grades g ON e.enrollment_id = g.enrollment_id " +
-                    "WHERE e.student_id = ?";
+            String query = "SELECT c.course_name, g.grade FROM enrollments e "
+                    + "JOIN courses c ON e.course_id = c.course_id "
+                    + "LEFT JOIN grades g ON e.enrollment_id = g.enrollment_id "
+                    + "WHERE e.student_id = ?";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, studentId);
 
@@ -206,10 +270,10 @@ public class OfficeReportGenerator {
     // Method to write completed modules and student grades to file
     private static void writeCompletedModulesToFile(int studentId, FileWriter writer, Connection connection) throws IOException {
         try {
-            String query = "SELECT c.course_name, g.grade FROM enrollments e " +
-                    "JOIN courses c ON e.course_id = c.course_id " +
-                    "LEFT JOIN grades g ON e.enrollment_id = g.enrollment_id " +
-                    "WHERE e.student_id = ?";
+            String query = "SELECT c.course_name, g.grade FROM enrollments e "
+                    + "JOIN courses c ON e.course_id = c.course_id "
+                    + "LEFT JOIN grades g ON e.enrollment_id = g.enrollment_id "
+                    + "WHERE e.student_id = ?";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, studentId);
 
@@ -225,13 +289,39 @@ public class OfficeReportGenerator {
         }
     }
 
+    // Method to retrieve completed modules and student grades as a string
+    private static void retrieveCompletedModulesToString(int studentId, StringBuilder stringBuilder, Connection connection) {
+        try {
+            String query = "SELECT c.course_name, g.grade FROM enrollments e "
+                    + "JOIN courses c ON e.course_id = c.course_id "
+                    + "LEFT JOIN grades g ON e.enrollment_id = g.enrollment_id "
+                    + "WHERE e.student_id = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, studentId);
+
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                String courseName = resultSet.getString("course_name");
+                float grade = resultSet.getFloat("grade");
+                stringBuilder.append(courseName).append(" (Grade: ").append(grade).append("), ");
+            }
+            // Remove trailing comma and space
+            if (stringBuilder.length() > 2) {
+                stringBuilder.setLength(stringBuilder.length() - 2);
+            }
+        } catch (SQLException e) {
+            stringBuilder.append("Error retrieving completed modules: ").append(e.getMessage());
+        }
+    }
+
     // Method to retrieve modules that need to be repeated
     private static void retrieveModulesToRepeat(int studentId, Connection connection) {
         try {
-            String query = "SELECT c.course_name FROM courses c " +
-                    "JOIN enrollments e ON c.course_id = e.course_id " +
-                    "LEFT JOIN grades g ON e.enrollment_id = g.enrollment_id " +
-                    "WHERE e.student_id = ? AND (g.grade < 40 OR g.grade IS NULL)";
+            String query = "SELECT c.course_name FROM courses c "
+                    + "JOIN enrollments e ON c.course_id = e.course_id "
+                    + "LEFT JOIN grades g ON e.enrollment_id = g.enrollment_id "
+                    + "WHERE e.student_id = ? AND (g.grade < 40 OR g.grade IS NULL)";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, studentId);
 
@@ -257,10 +347,10 @@ public class OfficeReportGenerator {
     // Method to write modules that need to be repeated to file
     private static void writeModulesToRepeatToFile(int studentId, FileWriter writer, Connection connection) throws IOException {
         try {
-            String query = "SELECT c.course_name FROM courses c " +
-                    "JOIN enrollments e ON c.course_id = e.course_id " +
-                    "LEFT JOIN grades g ON e.enrollment_id = g.enrollment_id " +
-                    "WHERE e.student_id = ? AND (g.grade < 40 OR g.grade IS NULL)";
+            String query = "SELECT c.course_name FROM courses c "
+                    + "JOIN enrollments e ON c.course_id = e.course_id "
+                    + "LEFT JOIN grades g ON e.enrollment_id = g.enrollment_id "
+                    + "WHERE e.student_id = ? AND (g.grade < 40 OR g.grade IS NULL)";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, studentId);
 
@@ -280,6 +370,38 @@ public class OfficeReportGenerator {
 
         } catch (SQLException e) {
             writer.write("Error retrieving modules to be repeated: " + e.getMessage() + "\n");
+        }
+    }
+
+    // Method to retrieve modules that need to be repeated as a string
+    private static void retrieveModulesToRepeatToString(int studentId, StringBuilder stringBuilder, Connection connection) {
+        try {
+            String query = "SELECT c.course_name FROM courses c "
+                    + "JOIN enrollments e ON c.course_id = e.course_id "
+                    + "LEFT JOIN grades g ON e.enrollment_id = g.enrollment_id "
+                    + "WHERE e.student_id = ? AND (g.grade < 40 OR g.grade IS NULL)";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, studentId);
+
+            ResultSet resultSet = statement.executeQuery();
+
+            boolean modulesFound = false;
+
+            while (resultSet.next()) {
+                String courseName = resultSet.getString("course_name");
+                stringBuilder.append(courseName).append(", ");
+                modulesFound = true;
+            }
+
+            if (!modulesFound) {
+                stringBuilder.append("None");
+            } else {
+                // Remove trailing comma and space
+                stringBuilder.setLength(stringBuilder.length() - 2);
+            }
+
+        } catch (SQLException e) {
+            stringBuilder.append("Error retrieving modules to be repeated: ").append(e.getMessage());
         }
     }
 }

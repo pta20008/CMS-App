@@ -1,13 +1,11 @@
 /*
  * https://github.com/pta20008/CMS-App.git
  */
-
 package cmsapp;
 
 /**
  * @author bruno
-**/
-
+ */
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
@@ -21,10 +19,10 @@ public class LecturerReportGenerator {
     public static void generateLecturerReport(String username, Connection connection) {
         try {
             // Check info about lectures and students count
-            String query = "SELECT c.lecturer, c.program, COUNT(e.student_id) AS students_count " +
-                           "FROM courses c " +
-                           "INNER JOIN enrollments e ON c.course_id = e.course_id " +
-                           "GROUP BY c.lecturer, c.program";
+            String query = "SELECT c.lecturer, c.program, COUNT(e.student_id) AS students_count "
+                    + "FROM courses c "
+                    + "INNER JOIN enrollments e ON c.course_id = e.course_id "
+                    + "GROUP BY c.lecturer, c.program";
             PreparedStatement statement = connection.prepareStatement(query);
             ResultSet resultSet = statement.executeQuery();
 
@@ -84,7 +82,7 @@ public class LecturerReportGenerator {
 
     // Method to save the report to a text file (.txt)
     private static void saveReportToTextFile(ResultSet resultSet) throws SQLException {
-        try (FileWriter writer = new FileWriter("lecturer_report.txt")) {
+        try ( FileWriter writer = new FileWriter("lecturer_report.txt")) {
             writer.write("===== Lecturer Report =====\n");
             while (resultSet.next()) {
                 String lecturerName = resultSet.getString("lecturer");
@@ -104,7 +102,7 @@ public class LecturerReportGenerator {
 
     // Method to save the report to a CSV file (.csv)
     private static void saveReportToCSVFile(ResultSet resultSet) throws SQLException {
-        try (FileWriter writer = new FileWriter("lecturer_report.csv")) {
+        try ( FileWriter writer = new FileWriter("lecturer_report.csv")) {
             // Write header to CSV file
             writer.write("Lecturer,Program,Students Count\n");
 
