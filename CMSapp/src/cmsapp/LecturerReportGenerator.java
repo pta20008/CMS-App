@@ -35,7 +35,7 @@ public class LecturerReportGenerator {
             }
 
             // Report options
-            System.out.println("How do you want to display the report?");
+            System.out.println("\nHow do you want to display the report?");
             System.out.println("1. Print on screen");
             System.out.println("2. Save to text file");
             System.out.println("3. Save to CSV file");
