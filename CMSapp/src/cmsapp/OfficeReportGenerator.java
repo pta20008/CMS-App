@@ -17,18 +17,18 @@ public class OfficeReportGenerator {
 
     public static void generateStudentReport(Connection connection) {
         try {
-            // Looking for all students
+            // Finding all students
             String query = "SELECT * FROM students";
             PreparedStatement statement = connection.prepareStatement(query);
             ResultSet resultSet = statement.executeQuery();
 
-            // Check the results
+            // Checking the results
             if (!resultSet.isBeforeFirst()) {
-                System.out.println("Student not found.");
+                System.out.println("No student found.");
                 return;
             }
 
-            // Generate a report for each student
+            // Generating a report for each student
             while (resultSet.next()) {
                 int studentId = resultSet.getInt("student_id");
                 String studentName = resultSet.getString("student_name");
@@ -41,19 +41,19 @@ public class OfficeReportGenerator {
                 System.out.println("Student Number: " + studentNumber);
                 System.out.println("Program: " + program);
 
-                // Check the student module enrollment 
+                // Checking student module enrollment
                 System.out.println("\nEnrolled Modules:");
                 retrieveEnrolledModules(studentId, connection);
 
-                // Check for finished modules and grade for each student
+                // Checking for completed modules and grades for each student
                 System.out.println("\nCompleted Modules:");
                 retrieveCompletedModules(studentId, connection);
 
-                // Check module that need to be repeated by the student
+                // Checking modules that need to be repeated by the student
                 System.out.println("\nModules to Repeat:");
                 retrieveModulesToRepeat(studentId, connection);
-                
-                System.out.println("-----------------------------");
+
+                System.out.println("=============================");
 
                 System.out.println();
             }
@@ -62,12 +62,12 @@ public class OfficeReportGenerator {
         }
     }
 
-    // Method to search for students enrolled modules
+    // Method to retrieve students' enrolled modules
     private static void retrieveEnrolledModules(int studentId, Connection connection) {
         try {
             String query = "SELECT c.course_name FROM enrollments e " +
-                           "JOIN courses c ON e.course_id = c.course_id " +
-                           "WHERE e.student_id = ?";
+                    "JOIN courses c ON e.course_id = c.course_id " +
+                    "WHERE e.student_id = ?";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, studentId);
 
@@ -78,17 +78,17 @@ public class OfficeReportGenerator {
                 System.out.println("- " + courseName);
             }
         } catch (SQLException e) {
-            System.out.println("Error retriving enrolled modules: " + e.getMessage());
+            System.out.println("Error retrieving enrolled modules: " + e.getMessage());
         }
     }
 
-    // Method to check completed modules and student grade
+    // Method to check completed modules and student grades
     private static void retrieveCompletedModules(int studentId, Connection connection) {
         try {
             String query = "SELECT c.course_name, g.grade FROM enrollments e " +
-                           "JOIN courses c ON e.course_id = c.course_id " +
-                           "LEFT JOIN grades g ON e.enrollment_id = g.enrollment_id " +
-                           "WHERE e.student_id = ?";
+                    "JOIN courses c ON e.course_id = c.course_id " +
+                    "LEFT JOIN grades g ON e.enrollment_id = g.enrollment_id " +
+                    "WHERE e.student_id = ?";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, studentId);
 
@@ -100,28 +100,36 @@ public class OfficeReportGenerator {
                 System.out.println("- " + courseName + " (Grade: " + grade + ")");
             }
         } catch (SQLException e) {
-            System.out.println("Error retriving completed modules: " + e.getMessage());
+            System.out.println("Error retrieving completed modules: " + e.getMessage());
         }
     }
 
-    // Method to search modules to be repeated
+    // Method to retrieve modules that need to be repeated
     private static void retrieveModulesToRepeat(int studentId, Connection connection) {
         try {
             String query = "SELECT c.course_name FROM courses c " +
-                           "JOIN enrollments e ON c.course_id = e.course_id " +
-                           "LEFT JOIN grades g ON e.enrollment_id = g.enrollment_id " +
-                           "WHERE e.student_id = ? AND g.grade IS NULL";
+                    "JOIN enrollments e ON c.course_id = e.course_id " +
+                    "LEFT JOIN grades g ON e.enrollment_id = g.enrollment_id " +
+                    "WHERE e.student_id = ? AND (g.grade < 40 OR g.grade IS NULL)";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, studentId);
 
             ResultSet resultSet = statement.executeQuery();
 
+            boolean modulesFound = false;
+
             while (resultSet.next()) {
                 String courseName = resultSet.getString("course_name");
                 System.out.println("- " + courseName);
+                modulesFound = true;
             }
+
+            if (!modulesFound) {
+                System.out.println("None");
+            }
+
         } catch (SQLException e) {
-            System.out.println("Error retriving modules to be repeated: " + e.getMessage());
+            System.out.println("Error retrieving modules to be repeated: " + e.getMessage());
         }
     }
 }
