@@ -5,9 +5,8 @@
 package cmsapp;
 
 /**
- *
  * @author bruno
- */
+**/
 
 import java.io.FileWriter;
 import java.io.IOException;

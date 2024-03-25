@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.util.Scanner;
 
 import cmsapp.LecturerReportGenerator;
+import cmsapp.OfficeReportGenerator;
 
 
 public class Main {
@@ -83,7 +84,7 @@ public class Main {
     private static void displayMenu(User user, Scanner scanner, Connection connection) {
         while (true) {
             System.out.println("\n===== College Management System Menu =====");
-            System.out.println("Welcome: " + user.getUsername() + "\nRole: (" + user.getRole() + ")"); // Exibe o nome de usuário e a função do usuário conectado
+            System.out.println("Welcome: " + user.getUsername() + "\nRole: (" + user.getRole() + ")"); // Show the username and the role when connected
             System.out.println();
 
             // Display menu options based on user role
@@ -122,7 +123,7 @@ public class Main {
                     break;
                 case 2:
                     if (user.getRole() != UserRole.ADMIN && user.getRole() != UserRole.LECTURER) {
-                        generateStudentReport(connection);
+                        OfficeReportGenerator.generateStudentReport(connection);
                     } else {
                         System.out.println("Invalid choice.");
                     }
@@ -130,6 +131,8 @@ public class Main {
                 case 3:
                     if (user.getRole() != UserRole.ADMIN) {
                         if (user.getRole() == UserRole.LECTURER) {
+                            LecturerReportGenerator.generateLecturerReport(user.getUsername(), connection);
+                        } if (user.getRole() == UserRole.OFFICE) {
                             LecturerReportGenerator.generateLecturerReport(user.getUsername(), connection);
                         } else {
                             System.out.println("Invalid choice.");
@@ -158,11 +161,6 @@ public class Main {
     private static void generateCourseReport(Connection connection) {
         // Implement course report generation logic with database operations
         System.out.println("Generating Course Report...");
-    }
-    // Method to generate student report
-    private static void generateStudentReport(Connection connection) {
-        // Implement student report generation logic with database operations
-        System.out.println("Generating Student Report...");
     }
 
     // Method to change user password
