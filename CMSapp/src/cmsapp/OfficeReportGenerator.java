@@ -16,6 +16,7 @@ import java.util.Scanner;
 
 public class OfficeReportGenerator {
 
+    // Report Menu options
     public static void generateStudentReport(Connection connection) {
         Scanner scanner = new Scanner(System.in);
         System.out.println("\nHow do you want to display the report?");

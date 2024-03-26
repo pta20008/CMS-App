@@ -9,8 +9,8 @@ package cmsapp;
  * input. Connects to the database and executes SQL queries.
  *
  * @author bruno
- *
  */
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -20,6 +20,8 @@ import java.util.Scanner;
 
 import cmsapp.LecturerReportGenerator;
 import cmsapp.OfficeReportGenerator;
+import cmsapp.CourseReportGenerator;
+
 
 public class Main {
 
@@ -116,7 +118,7 @@ public class Main {
             switch (choice) {
                 case 1:
                     if (user.getRole() != UserRole.ADMIN && user.getRole() != UserRole.LECTURER) {
-                        generateCourseReport(connection);
+                        CourseReportGenerator.generateCourseReport(connection);
                     } else {
                         System.out.println("Invalid choice.");
                     }
@@ -157,12 +159,6 @@ public class Main {
                     break;
             }
         }
-    }
-
-    // Method to generate course report
-    private static void generateCourseReport(Connection connection) {
-        // Implement course report generation logic with database operations
-        System.out.println("Generating Course Report...");
     }
 
     // Method to change user password

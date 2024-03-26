@@ -32,7 +32,7 @@ public class LecturerReportGenerator {
                 return;
             }
 
-            // Report options
+            // Report Menu options
             System.out.println("\nHow do you want to display the report?");
             System.out.println("1. Print on screen");
             System.out.println("2. Save to text file");
@@ -42,7 +42,7 @@ public class LecturerReportGenerator {
 
             Scanner scanner = new Scanner(System.in);
             int choice = scanner.nextInt();
-            scanner.nextLine();
+            scanner.nextLine(); // Consume newline character
 
             // Check user choice
             switch (choice) {
