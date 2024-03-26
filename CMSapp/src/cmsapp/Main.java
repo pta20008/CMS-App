@@ -5,9 +5,14 @@
 package cmsapp;
 
 /**
- * Main class responsible for handling user authentication and menu display.
+ * Main class is responsible for handling user authentication and menu display.
  * Built to manager user interactions and use appropriate methods based on user
  * input. Connects to the database and executes SQL queries.
+ *
+ * Overall, the Main class manage the user authentication, menu display, and 
+ * various user actions in the College Management System application. 
+ * It interacts with the database to perform operations such as user 
+ * authentication, data retrieval, and modification.
  *
  * @author bruno
  */
@@ -89,27 +94,27 @@ public class Main {
             System.out.println("Welcome: " + user.getUsername() + "\nRole: (" + user.getRole() + ")"); // Show the username and the role when connected
             System.out.println();
 
-            // Display menu options based on user role
+            // Display menu options based on user role            
             if (user.getRole() == UserRole.OFFICE) {
                 System.out.println("1. Generate Course Report");
                 System.out.println("2. Generate Student Report");
                 System.out.println("3. Generate Lecturer Report");
                 System.out.println("4. Change Username");
                 System.out.println("5. Change Password");
-                System.out.println("0. Logout");
             } else if (user.getRole() == UserRole.ADMIN) {
                 System.out.println("4. Change Username");
                 System.out.println("5. Change Password");
                 System.out.println("6. Add User");
                 System.out.println("7. Remove User");
                 System.out.println("8. Update User");
-                System.out.println("0. Logout");
             } else if (user.getRole() == UserRole.LECTURER) {
                 System.out.println("3. Generate Lecturer Report");
                 System.out.println("4. Change Username");
                 System.out.println("5. Change Password");
-                System.out.println("0. Logout");
             }
+            // Exit app
+            System.out.println("0. Logout");
+
 
             // Prompt user for input menu and process choice
             System.out.print("\nEnter your choice: ");
