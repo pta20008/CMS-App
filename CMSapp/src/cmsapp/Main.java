@@ -1,6 +1,7 @@
 /*
  * https://github.com/pta20008/CMS-App.git
  */
+
 package cmsapp;
 
 /**
@@ -101,6 +102,7 @@ public class Main {
                 System.out.println("5. Change Password");
                 System.out.println("6. Add User");
                 System.out.println("7. Remove User");
+                System.out.println("8. Update User");
                 System.out.println("0. Logout");
             } else if (user.getRole() == UserRole.LECTURER) {
                 System.out.println("3. Generate Lecturer Report");
@@ -109,7 +111,7 @@ public class Main {
                 System.out.println("0. Logout");
             }
 
-            // Prompt user for input and process choice
+            // Prompt user for input menu and process choice
             System.out.print("\nEnter your choice: ");
             int choice = scanner.nextInt();
             scanner.nextLine(); // Consume newline character
@@ -148,6 +150,27 @@ public class Main {
                 case 5:
                     changePassword(user, scanner, connection);
                     break;
+                case 6:
+                    if (user.getRole() == UserRole.ADMIN) {
+                        addUser(scanner, connection);
+                    } else {
+                        System.out.println("Invalid choice.");
+                    }
+                    break;
+                case 7:
+                    if (user.getRole() == UserRole.ADMIN) {
+                        removeUser(scanner, connection);
+                    } else {
+                        System.out.println("Invalid choice.");
+                    }
+                    break;
+                case 8:
+                    if (user.getRole() == UserRole.ADMIN) {
+                        updateUser(scanner, connection);
+                    } else {
+                        System.out.println("Invalid choice.");
+                    }
+                    break;
                 case 0:
                     System.out.println("Logging out...");
                     return;
@@ -175,8 +198,8 @@ public class Main {
             System.out.println("Error changing password: " + e.getMessage());
         }
     }
-    // Method to change username
 
+    // Method to change username
     private static void changeUsername(User user, Scanner scanner, Connection connection) {
         try {
             System.out.print("Enter new username: ");
@@ -225,7 +248,7 @@ public class Main {
     // Method to remove user
     private static void removeUser(Scanner scanner, Connection connection) {
         try {
-            System.out.print("\nEnter user_id to remove:");
+            System.out.print("\nEnter user_id to remove: ");
             int userId = scanner.nextInt();
             scanner.nextLine(); // Consume newline character
 
@@ -266,18 +289,62 @@ public class Main {
         }
     }
 
-}
-// Enum to represent user roles
+    // Method to update user
+    private static void updateUser(Scanner scanner, Connection connection) {
+        try {
+            System.out.print("\nEnter user_id to update: ");
+            int userId = scanner.nextInt();
+            scanner.nextLine(); // Consume newline character
 
+            String selectQuery = "SELECT username, role FROM users WHERE user_id = ?";
+            PreparedStatement selectStatement = connection.prepareStatement(selectQuery);
+            selectStatement.setInt(1, userId);
+            ResultSet resultSet = selectStatement.executeQuery();
+
+            if (resultSet.next()) {
+                String username = resultSet.getString("username");
+                String role = resultSet.getString("role");
+                System.out.println("\nUser ID: " + userId);
+                System.out.println("Username: " + username);
+                System.out.println("Role: " + role);
+
+                System.out.print("\nEnter new username: ");
+                String newUsername = scanner.nextLine();
+
+                System.out.print("Enter new password: ");
+                String newPassword = scanner.nextLine();
+
+                System.out.print("Enter new role (ADMIN, OFFICE, LECTURER): ");
+                String newRoleString = scanner.nextLine();
+                UserRole newRole = UserRole.valueOf(newRoleString.toUpperCase());
+
+                String updateQuery = "UPDATE users SET username = ?, password = ?, role = ? WHERE user_id = ?";
+                PreparedStatement updateStatement = connection.prepareStatement(updateQuery);
+                updateStatement.setString(1, newUsername);
+                updateStatement.setString(2, newPassword);
+                updateStatement.setString(3, newRole.toString());
+                updateStatement.setInt(4, userId);
+                updateStatement.executeUpdate();
+
+                System.out.println("User with user_id '" + userId + "' has been updated successfully.");
+            } else {
+                System.out.println("User with user_id '" + userId + "' not found.");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error updating user: " + e.getMessage());
+        }
+    }
+}
+
+// Enum to represent user roles
 enum UserRole {
     ADMIN,
     OFFICE,
     LECTURER
 }
+
 // User class representing a user with username and role
-
 class User {
-
     private String username;
     private UserRole role;
 
@@ -298,3 +365,4 @@ class User {
         this.username = username;
     }
 }
+
