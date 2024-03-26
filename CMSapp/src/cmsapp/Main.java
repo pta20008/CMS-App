@@ -22,7 +22,6 @@ import cmsapp.LecturerReportGenerator;
 import cmsapp.OfficeReportGenerator;
 import cmsapp.CourseReportGenerator;
 
-
 public class Main {
 
     // Database connection details
@@ -137,9 +136,7 @@ public class Main {
                         }
                         if (user.getRole() == UserRole.OFFICE) {
                             LecturerReportGenerator.generateLecturerReport(user.getUsername(), connection);
-                        } else {
-                            System.out.println("Invalid choice.");
-                        }
+                        } 
                     } else {
                         System.out.println("Invalid choice.");
                     }
